@@ -22,44 +22,20 @@ jobs:
             -d '{
               "msg_type": "interactive",
               "card": {
-                "schema": "2.0",
-                "config": {
-                  "update_multi": true,
-                  "style": {
-                    "text_size": {
-                      "normal_v2": {
-                        "default": "normal",
-                        "pc": "normal",
-                        "mobile": "heading"
-                      }
-                    }
-                  }
-                },
-                "body": {
-                  "direction": "vertical",
-                  "padding": "12px 12px 12px 12px",
-                  "elements": [
-                    {
-                      "tag": "markdown",
-                      "content": "i love you",
-                      "text_align": "left",
-                      "text_size": "normal_v2",
-                      "margin": "0px 0px 0px 0px"
-                    }
-                  ]
-                },
                 "header": {
-                  "title": {
-                    "tag": "plain_text",
-                    "content": "hello everyone "
+                  "title": {"tag": "plain_text", "content": "hello everyone "},
+                  "template": "blue"
+                },
+                "elements": [
+                  {
+                    "tag": "div",
+                    "text": {"tag": "lark_md", "content": "**first**\ni love you "}
                   },
-                  "subtitle": {
-                    "tag": "plain_text",
-                    "content": ""
-                  },
-                  "template": "blue",
-                  "padding": "12px 12px 12px 12px"
-                }
+                  {
+                    "tag": "div",
+                    "text": {"tag": "lark_md", "content": "**第二行**\ni love you too"}
+                  }
+                ]
               }
             }'
 
