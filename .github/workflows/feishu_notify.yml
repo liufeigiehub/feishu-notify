@@ -23,17 +23,17 @@ jobs:
               "msg_type": "interactive",
               "card": {
                 "header": {
-                  "title": {"tag": "plain_text", "content": "hello everyone "},
+                  "title": {"tag": "plain_text", "content": "排班提醒"},
                   "template": "blue"
                 },
                 "elements": [
                   {
                     "tag": "div",
-                    "text": {"tag": "lark_md", "content": "**first**\ni love you "}
+                    "text": {"tag": "lark_md", "content": "**5月**\ni love you "}
                   },
                   {
                     "tag": "div",
-                    "text": {"tag": "lark_md", "content": "**第二行**\ni love you too"}
+                    "text": {"tag": "lark_md", "content": "**5月**\ni love you too"}
                   }
                 ]
               }
