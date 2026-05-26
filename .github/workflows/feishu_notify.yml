@@ -132,24 +132,21 @@ jobs:
           echo "DAY1_LABEL=$DAY1_LABEL" >> $GITHUB_ENV
           echo "DAY2_LABEL=$DAY2_LABEL" >> $GITHUB_ENV
 
-          # 保存节假日值班安排到环境变量
-          # 将关联数组转换为可序列化的格式
-          HOLIDAY_DUTY_STR=""
-          for key in "${!HOLIDAY_DUTY[@]}"; do
-            HOLIDAY_DUTY_STR="${HOLIDAY_DUTY_STR}${key}:${HOLIDAY_DUTY[$key]}|"
-          done
-          echo "HOLIDAY_DUTY_STR=$HOLIDAY_DUTY_STR" >> $GITHUB_ENV
-
-          # 保存节假日名称
-          HOLIDAYS_STR=""
-          for key in "${!HOLIDAYS_2026[@]}"; do
-            HOLIDAYS_STR="${HOLIDAYS_STR}${key}:${HOLIDAYS_2026[$key]}|"
-          done
-          echo "HOLIDAYS_STR=$HOLIDAYS_STR" >> $GITHUB_ENV
-
           echo "值班日期: $DAY1_LABEL $DAY1, $DAY2_LABEL $DAY2"
           [ -n "$TODAY_HOLIDAY" ] && echo "今天是节假日: $TODAY_HOLIDAY"
           [ -n "$TOMORROW_HOLIDAY" ] && echo "明天是节假日: $TOMORROW_HOLIDAY"
+
+          echo "开始序列化节假日数据..."
+
+          # 保存节假日值班安排到环境变量（使用简单字符串格式）
+          HOLIDAY_DUTY_STR="06-19:王勇、王世腾|06-20:李思成、郭成志|06-21:李遥、刘剑飞|09-25:王勇、王世腾|09-26:李闯、谢兵阳|09-27:段传俊、于国涛|10-01:璩诚、孟凡奎|10-02:胡海斌、王毅|10-03:李东原、严鑫鑫|10-04:翁弘毅、王勇|10-05:王世腾、李思成|10-06:郭成志、李遥|10-07:刘剑飞、李闯"
+          echo "HOLIDAY_DUTY_STR=$HOLIDAY_DUTY_STR" >> $GITHUB_ENV
+
+          # 保存节假日名称
+          HOLIDAYS_STR="01-01:元旦|01-02:元旦|01-03:元旦|02-15:春节|02-16:春节|02-17:春节|02-18:春节|02-19:春节|02-20:春节|02-21:春节|04-04:清明节|04-05:清明节|04-06:清明节|05-01:劳动节|05-02:劳动节|05-03:劳动节|05-04:劳动节|05-05:劳动节|06-19:端午节|06-20:端午节|06-21:端午节|09-25:中秋节|09-26:中秋节|09-27:中秋节|10-01:国庆节|10-02:国庆节|10-03:国庆节|10-04:国庆节|10-05:国庆节|10-06:国庆节|10-07:国庆节"
+          echo "HOLIDAYS_STR=$HOLIDAYS_STR" >> $GITHUB_ENV
+
+          echo "序列化完成"
 
       - name: Send Feishu Message
         env:
