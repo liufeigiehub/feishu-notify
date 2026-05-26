@@ -2,6 +2,7 @@ name: Feishu Duty Notification
 
 # 每周五、六、日上午11点发送（北京时间）
 # 北京时间11:00 = UTC时间03:00
+# 节假日前一天也会提醒
 
 on:
   schedule:
@@ -18,21 +19,90 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Calculate duty dates
+      - name: Calculate duty dates and check holidays
         run: |
-          # 获取当前星期几和日期
-          WEEKDAY=$(date '+%u')  # 1=周一, 7=周日
+          # 获取当前日期
           CURRENT_DATE=$(date '+%Y-%m-%d')
+          CURRENT_MONTH_DAY=$(date '+%m-%d')
+          WEEKDAY=$(date '+%u')  # 1=周一, 7=周日
 
           echo "当前日期: $CURRENT_DATE"
           echo "当前星期: 周$WEEKDAY"
 
-          # 根据星期几计算值班日期
-          # 周五(5): 提醒周六(+1)和周日(+2)
-          # 周六(6): 提醒当天和周日(+1)
-          # 周日(7): 提醒当天
-          # 其他日期(手动触发): 发送本周周六和周日
+          # 2026年法定节假日定义（基于农历正确计算）
+          # 格式: 日期=节假日名称
+          # 元旦: 1月1日-3日
+          # 春节: 2月15日(除夕)-21日(初六)
+          # 清明: 4月4日-6日
+          # 劳动节: 5月1日-5日
+          # 端午: 6月19日-21日（农历五月初五=公历6月19日）
+          # 中秋: 9月25日-27日（农历八月十五=公历9月25日）
+          # 国庆: 10月1日-7日
+          declare -A HOLIDAYS_2026=(
+              ["01-01"]="元旦"
+              ["01-02"]="元旦"
+              ["01-03"]="元旦"
+              ["02-15"]="春节(除夕)"
+              ["02-16"]="春节(初一)"
+              ["02-17"]="春节(初二)"
+              ["02-18"]="春节(初三)"
+              ["02-19"]="春节(初四)"
+              ["02-20"]="春节(初五)"
+              ["02-21"]="春节(初六)"
+              ["04-04"]="清明节"
+              ["04-05"]="清明节"
+              ["04-06"]="清明节"
+              ["05-01"]="劳动节"
+              ["05-02"]="劳动节"
+              ["05-03"]="劳动节"
+              ["05-04"]="劳动节"
+              ["05-05"]="劳动节"
+              ["06-19"]="端午节"
+              ["06-20"]="端午节"
+              ["06-21"]="端午节"
+              ["09-25"]="中秋节"
+              ["09-26"]="中秋节"
+              ["09-27"]="中秋节"
+              ["10-01"]="国庆节"
+              ["10-02"]="国庆节"
+              ["10-03"]="国庆节"
+              ["10-04"]="国庆节"
+              ["10-05"]="国庆节"
+              ["10-06"]="国庆节"
+              ["10-07"]="国庆节"
+          )
 
+          # 节假日值班安排（从5月26日后开始，17人平均分配）
+          # 端午节3天 + 中秋节3天 + 国庆节7天 = 13天，26人次
+          # 让周末值班少的同事多安排节假日，尽量达到每人总计8次左右
+          declare -A HOLIDAY_DUTY=(
+              ["06-19"]="王勇、王世腾"
+              ["06-20"]="李思成、郭成志"
+              ["06-21"]="李遥、刘剑飞"
+              ["09-25"]="王勇、王世腾"
+              ["09-26"]="李闯、谢兵阳"
+              ["09-27"]="段传俊、于国涛"
+              ["10-01"]="璩诚、孟凡奎"
+              ["10-02"]="胡海斌、王毅"
+              ["10-03"]="李东原、严鑫鑫"
+              ["10-04"]="翁弘毅、王勇"
+              ["10-05"]="王世腾、李思成"
+              ["10-06"]="郭成志、李遥"
+              ["10-07"]="刘剑飞、李闯"
+          )
+
+          # 检查今天是否是节假日
+          TODAY_HOLIDAY="${HOLIDAYS_2026[$CURRENT_MONTH_DAY]}"
+
+          # 检查明天是否是节假日
+          TOMORROW_DATE=$(date -d "+1 days" '+%m-%d')
+          TOMORROW_HOLIDAY="${HOLIDAYS_2026[$TOMORROW_DATE]}"
+
+          echo "TODAY_HOLIDAY=$TODAY_HOLIDAY" >> $GITHUB_ENV
+          echo "TOMORROW_HOLIDAY=$TOMORROW_HOLIDAY" >> $GITHUB_ENV
+          echo "TOMORROW_DATE=$TOMORROW_DATE" >> $GITHUB_ENV
+
+          # 根据星期几计算值班日期
           if [ "$WEEKDAY" == "5" ]; then
             DAY1=$(date -d "+1 days" '+%m-%d')
             DAY2=$(date -d "+2 days" '+%m-%d')
@@ -62,7 +132,24 @@ jobs:
           echo "DAY1_LABEL=$DAY1_LABEL" >> $GITHUB_ENV
           echo "DAY2_LABEL=$DAY2_LABEL" >> $GITHUB_ENV
 
+          # 保存节假日值班安排到环境变量
+          # 将关联数组转换为可序列化的格式
+          HOLIDAY_DUTY_STR=""
+          for key in "${!HOLIDAY_DUTY[@]}"; do
+            HOLIDAY_DUTY_STR="${HOLIDAY_DUTY_STR}${key}:${HOLIDAY_DUTY[$key]}|"
+          done
+          echo "HOLIDAY_DUTY_STR=$HOLIDAY_DUTY_STR" >> $GITHUB_ENV
+
+          # 保存节假日名称
+          HOLIDAYS_STR=""
+          for key in "${!HOLIDAYS_2026[@]}"; do
+            HOLIDAYS_STR="${HOLIDAYS_STR}${key}:${HOLIDAYS_2026[$key]}|"
+          done
+          echo "HOLIDAYS_STR=$HOLIDAYS_STR" >> $GITHUB_ENV
+
           echo "值班日期: $DAY1_LABEL $DAY1, $DAY2_LABEL $DAY2"
+          [ -n "$TODAY_HOLIDAY" ] && echo "今天是节假日: $TODAY_HOLIDAY"
+          [ -n "$TOMORROW_HOLIDAY" ] && echo "明天是节假日: $TOMORROW_HOLIDAY"
 
       - name: Send Feishu Message
         env:
@@ -70,8 +157,13 @@ jobs:
           DAY2: ${{ env.DAY2 }}
           DAY1_LABEL: ${{ env.DAY1_LABEL }}
           DAY2_LABEL: ${{ env.DAY2_LABEL }}
+          TODAY_HOLIDAY: ${{ env.TODAY_HOLIDAY }}
+          TOMORROW_HOLIDAY: ${{ env.TOMORROW_HOLIDAY }}
+          TOMORROW_DATE: ${{ env.TOMORROW_DATE }}
+          HOLIDAY_DUTY_STR: ${{ env.HOLIDAY_DUTY_STR }}
+          HOLIDAYS_STR: ${{ env.HOLIDAYS_STR }}
         run: |
-          # 值班表 - 平均分配版
+          # 周末值班表 - 平均分配版（节假日日期已移除，由节假日值班表覆盖）
           declare -A SCHEDULE=(
               ["05-30"]="段传俊、于国涛"
               ["05-31"]="璩诚、李思成"
@@ -79,8 +171,6 @@ jobs:
               ["06-07"]="郭成志、谢兵阳"
               ["06-13"]="王毅、李东原"
               ["06-14"]="严鑫鑫、李遥"
-              ["06-20"]="王世腾、李闯"
-              ["06-21"]="刘剑飞、王勇"
               ["06-27"]="翁弘毅、王勇"
               ["06-28"]="于国涛、刘剑飞"
               ["07-04"]="李东原、郭成志"
@@ -107,10 +197,6 @@ jobs:
               ["09-13"]="郭成志、刘剑飞"
               ["09-19"]="璩诚、于国涛"
               ["09-20"]="王世腾、谢兵阳"
-              ["09-26"]="郭成志、李思成"
-              ["09-27"]="李遥、胡海斌"
-              ["10-03"]="段传俊、王勇"
-              ["10-04"]="王世腾、严鑫鑫"
               ["10-10"]="刘剑飞、璩诚"
               ["10-11"]="王毅、李闯"
               ["10-17"]="李东原、谢兵阳"
@@ -137,55 +223,85 @@ jobs:
               ["12-27"]="胡海斌、段传俊"
           )
 
-          DAY1_PERSON="${SCHEDULE[$DAY1]:-'待安排'}"
-          DAY2_PERSON="${SCHEDULE[$DAY2]:-'待安排'}"
+          # 重建节假日值班关联数组
+          declare -A HOLIDAY_DUTY
+          IFS='|' read -ra HOLIDAY_PAIRS <<< "$HOLIDAY_DUTY_STR"
+          for pair in "${HOLIDAY_PAIRS[@]}"; do
+            if [ -n "$pair" ]; then
+              IFS=':' read -r key value <<< "$pair"
+              HOLIDAY_DUTY[$key]="$value"
+            fi
+          done
 
-          echo "$DAY1_LABEL值班: $DAY1_PERSON"
-          if [ -n "$DAY2_LABEL" ]; then
-            echo "$DAY2_LABEL值班: $DAY2_PERSON"
+          # 重建节假日名称关联数组
+          declare -A HOLIDAYS
+          IFS='|' read -ra HOLIDAY_PAIRS <<< "$HOLIDAYS_STR"
+          for pair in "${HOLIDAY_PAIRS[@]}"; do
+            if [ -n "$pair" ]; then
+              IFS=':' read -r key value <<< "$pair"
+              HOLIDAYS[$key]="$value"
+            fi
+          done
+
+          WEBHOOK_URL="${{ secrets.FEISHU_WEBHOOK_URL }}"
+          if [ -z "$WEBHOOK_URL" ]; then
+            echo "错误：FEISHU_WEBHOOK_URL 未设置或为空"
+            exit 1
           fi
 
-          # 根据是否有第二天发送不同消息
-          if [ -n "$DAY2_LABEL" ]; then
-            curl -X POST "${{ secrets.FEISHU_WEBHOOK_URL }}" \
+          send_message() {
+            local title="$1"
+            local content="$2"
+            curl -s -X POST "$WEBHOOK_URL" \
               -H "Content-Type: application/json" \
               -d '{
                 "msg_type": "interactive",
                 "card": {
                   "header": {
-                    "title": {"tag": "plain_text", "content": "值班提醒"},
+                    "title": {"tag": "plain_text", "content": "'"$title"'"},
                     "template": "blue"
                   },
                   "elements": [
                     {
                       "tag": "div",
-                      "text": {"tag": "lark_md", "content": "**'"$DAY1_LABEL"' ('"$DAY1"')**\n'"$DAY1_PERSON"'"}
-                    },
-                    {
-                      "tag": "div",
-                      "text": {"tag": "lark_md", "content": "**'"$DAY2_LABEL"' ('"$DAY2"')**\n'"$DAY2_PERSON"'"}
+                      "text": {"tag": "lark_md", "content": "'"$content"'"}
                     }
                   ]
                 }
               }'
-          else
-            curl -X POST "${{ secrets.FEISHU_WEBHOOK_URL }}" \
-              -H "Content-Type: application/json" \
-              -d '{
-                "msg_type": "interactive",
-                "card": {
-                  "header": {
-                    "title": {"tag": "plain_text", "content": "值班提醒"},
-                    "template": "blue"
-                  },
-                  "elements": [
-                    {
-                      "tag": "div",
-                      "text": {"tag": "lark_md", "content": "**'"$DAY1_LABEL"' ('"$DAY1"')**\n'"$DAY1_PERSON"'"}
-                    }
-                  ]
-                }
-              }'
+          }
+
+          # 1. 如果今天是节假日，发送节假日值班提醒
+          if [ -n "$TODAY_HOLIDAY" ]; then
+            HOLIDAY_PERSON="${HOLIDAY_DUTY[$DAY1]:-'待安排'}"
+            echo "今天是节假日 $TODAY_HOLIDAY, 值班: $HOLIDAY_PERSON"
+            send_message "节假日值班提醒" "**$TODAY_HOLIDAY ($DAY1)**\n值班人员：$HOLIDAY_PERSON"
           fi
 
-          echo "消息已发送: $(date)"
+          # 2. 如果明天是节假日，发送节假日前一天提醒
+          if [ -n "$TOMORROW_HOLIDAY" ]; then
+            TOMORROW_PERSON="${HOLIDAY_DUTY[$TOMORROW_DATE]:-'待安排'}"
+            echo "明天是节假日 $TOMORROW_HOLIDAY, 值班: $TOMORROW_PERSON"
+            send_message "节假日值班提醒" "**明天是 $TOMORROW_HOLIDAY ($TOMORROW_DATE)**\n值班人员：$TOMORROW_PERSON"
+          fi
+
+          # 3. 常规周末值班提醒（如果不是节假日）
+          TODAY_IS_HOLIDAY="${HOLIDAYS[$DAY1]:-}"
+          DAY2_IS_HOLIDAY="${HOLIDAYS[$DAY2]:-}"
+
+          # 只有当天不是节假日时才发送周末提醒
+          if [ -z "$TODAY_IS_HOLIDAY" ]; then
+            DAY1_PERSON="${SCHEDULE[$DAY1]:-'待安排'}"
+
+            if [ -n "$DAY2_LABEL" ] && [ -z "$DAY2_IS_HOLIDAY" ]; then
+              DAY2_PERSON="${SCHEDULE[$DAY2]:-'待安排'}"
+              echo "$DAY1_LABEL值班: $DAY1_PERSON"
+              echo "$DAY2_LABEL值班: $DAY2_PERSON"
+              send_message "值班提醒" "**$DAY1_LABEL ($DAY1)**\n$DAY1_PERSON\n\n**$DAY2_LABEL ($DAY2)**\n$DAY2_PERSON"
+            else
+              echo "$DAY1_LABEL值班: $DAY1_PERSON"
+              send_message "值班提醒" "**$DAY1_LABEL ($DAY1)**\n$DAY1_PERSON"
+            fi
+          fi
+
+          echo "消息发送完成: $(date)"
