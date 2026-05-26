@@ -1,8 +1,7 @@
 name: Feishu Duty Notification
 
-# 每周二上午10点发送（北京时间）
-# 北京时间10:00 = UTC时间02:00
-# cron: 0 2 * * 2
+# 每周五、六、日上午11点发送（北京时间）
+# 北京时间11:00 = UTC时间03:00
 
 on:
   schedule:
@@ -19,31 +18,43 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Get day info
+      - name: Calculate duty dates
         run: |
           # 获取当前星期几和日期
           WEEKDAY=$(date '+%u')  # 1=周一, 7=周日
-          echo "WEEKDAY=$WEEKDAY" >> $GITHUB_ENV
+          CURRENT_DATE=$(date '+%Y-%m-%d')
+
+          echo "当前日期: $CURRENT_DATE"
+          echo "当前星期: 周$WEEKDAY"
 
           # 根据星期几计算值班日期
+          # 周五(5): 提醒周六(+1)和周日(+2)
+          # 周六(6): 提醒当天和周日(+1)
+          # 周日(7): 提醒当天
+          # 其他日期(手动触发): 发送本周周六和周日
+
           if [ "$WEEKDAY" == "5" ]; then
-            # 周五：提醒周六(+1)和周日(+2)
             DAY1=$(date -d "+1 days" '+%m-%d')
             DAY2=$(date -d "+2 days" '+%m-%d')
             DAY1_LABEL="周六"
             DAY2_LABEL="周日"
           elif [ "$WEEKDAY" == "6" ]; then
-            # 周六：提醒当天和周日(+1)
             DAY1=$(date '+%m-%d')
             DAY2=$(date -d "+1 days" '+%m-%d')
             DAY1_LABEL="周六"
             DAY2_LABEL="周日"
-          else
-            # 周日：只提醒当天
+          elif [ "$WEEKDAY" == "7" ]; then
             DAY1=$(date '+%m-%d')
             DAY2=""
             DAY1_LABEL="周日"
             DAY2_LABEL=""
+          else
+            # 手动触发（非周末）：发送本周周六和周日
+            DAYS_TO_SAT=$((6 - WEEKDAY))
+            DAY1=$(date -d "+$DAYS_TO_SAT days" '+%m-%d')
+            DAY2=$(date -d "+$((DAYS_TO_SAT + 1)) days" '+%m-%d')
+            DAY1_LABEL="周六"
+            DAY2_LABEL="周日"
           fi
 
           echo "DAY1=$DAY1" >> $GITHUB_ENV
