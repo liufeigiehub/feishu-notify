@@ -41,7 +41,7 @@ jobs:
                   "elements": [
                     {
                       "tag": "markdown",
-                      "content": "oi oi oi 阿巴阿巴阿巴",
+                      "content": "i love you",
                       "text_align": "left",
                       "text_size": "normal_v2",
                       "margin": "0px 0px 0px 0px"
@@ -51,7 +51,7 @@ jobs:
                 "header": {
                   "title": {
                     "tag": "plain_text",
-                    "content": "定时提醒"
+                    "content": "hello everyone "
                   },
                   "subtitle": {
                     "tag": "plain_text",
