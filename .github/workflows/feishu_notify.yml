@@ -1,17 +1,17 @@
 name: Feishu Duty Notification
 
-# 每周五、六、日上午11点发送（北京时间）
-# 北京时间11:00 = UTC时间03:00
+# 每周五、六、日上午10:54发送（北京时间）
+# 北京时间10:54 = UTC时间02:54
 # 节假日前一天也会提醒
 
 on:
   schedule:
-    # 周五 UTC 03:00 (北京时间 11:00)
-    - cron: '0 3 * * 5'
-    # 周六 UTC 03:00 (北京时间 11:00)
-    - cron: '0 3 * * 6'
-    # 周日 UTC 03:00 (北京时间 11:00)
-    - cron: '0 3 * * 0'
+    # 周五 UTC 02:54 (北京时间 10:54)
+    - cron: '54 2 * * 5'
+    # 周六 UTC 02:54 (北京时间 10:54)
+    - cron: '54 2 * * 6'
+    # 周日 UTC 02:54 (北京时间 10:54)
+    - cron: '54 2 * * 0'
   workflow_dispatch:  # 支持手动触发
 
 jobs:
@@ -284,7 +284,12 @@ jobs:
 
           # 3. 常规周末值班提醒（如果不是节假日）
           TODAY_IS_HOLIDAY="${HOLIDAYS[$DAY1]:-}"
-          DAY2_IS_HOLIDAY="${HOLIDAYS[$DAY2]:-}"
+          # 检查 DAY2 是否为空，避免空键访问关联数组
+          if [ -n "$DAY2" ]; then
+            DAY2_IS_HOLIDAY="${HOLIDAYS[$DAY2]:-}"
+          else
+            DAY2_IS_HOLIDAY=""
+          fi
 
           # 只有当天不是节假日时才发送周末提醒
           if [ -z "$TODAY_IS_HOLIDAY" ]; then
