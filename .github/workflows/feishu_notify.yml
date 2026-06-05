@@ -19,7 +19,28 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Check if already sent today
+        id: check-sent
+        run: |
+          TODAY=$(date '+%Y-%m-%d')
+          echo "今天日期: $TODAY"
+
+          # 获取今天成功的 workflow 运行记录
+          RUNS=$(curl -s "https://api.github.com/repos/${{ github.repository }}/actions/runs?per_page=20&status=success")
+
+          # 检查今天是否有成功的发送（排除当前运行ID）
+          SENT_COUNT=$(echo "$RUNS" | jq -r '.workflow_runs[] | select(.created_at | startswith("$TODAY")) | select(.name == "Feishu Duty Notification") | select(.id != "${{ github.run_id }}") | .id' | wc -l)
+
+          if [ "$SENT_COUNT" -gt 0 ]; then
+            echo "今天已有 $SENT_COUNT 次成功发送，跳过本次"
+            echo "skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "今天未发送，继续执行"
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Calculate duty dates and check holidays
+        if: steps.check-sent.outputs.skip != 'true'
         run: |
           # 获取当前日期
           CURRENT_DATE=$(date '+%Y-%m-%d')
@@ -149,6 +170,7 @@ jobs:
           echo "序列化完成"
 
       - name: Send Feishu Message
+        if: steps.check-sent.outputs.skip != 'true'
         env:
           DAY1: ${{ env.DAY1 }}
           DAY2: ${{ env.DAY2 }}
