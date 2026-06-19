@@ -292,9 +292,9 @@ jobs:
 
           # 1. 如果今天是节假日，发送节假日值班提醒
           if [ -n "$TODAY_HOLIDAY" ]; then
-            HOLIDAY_PERSON="${HOLIDAY_DUTY[$DAY1]:-'待安排'}"
+            HOLIDAY_PERSON="${HOLIDAY_DUTY[$CURRENT_MONTH_DAY]:-'待安排'}"
             echo "今天是节假日 $TODAY_HOLIDAY, 值班: $HOLIDAY_PERSON"
-            send_message "节假日值班提醒" "**$TODAY_HOLIDAY ($DAY1)**\n值班人员：$HOLIDAY_PERSON"
+            send_message "节假日值班提醒" "**$TODAY_HOLIDAY ($CURRENT_MONTH_DAY)**\n值班人员：$HOLIDAY_PERSON"
           fi
 
           # 2. 如果明天是节假日，发送节假日前一天提醒
@@ -305,7 +305,7 @@ jobs:
           fi
 
           # 3. 常规周末值班提醒（如果不是节假日）
-          TODAY_IS_HOLIDAY="${HOLIDAYS[$DAY1]:-}"
+          TODAY_IS_HOLIDAY="${HOLIDAYS[$CURRENT_MONTH_DAY]:-}"
           # 检查 DAY2 是否为空，避免空键访问关联数组
           if [ -n "$DAY2" ]; then
             DAY2_IS_HOLIDAY="${HOLIDAYS[$DAY2]:-}"
