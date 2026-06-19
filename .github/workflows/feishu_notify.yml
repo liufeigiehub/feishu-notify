@@ -123,6 +123,7 @@ jobs:
           TOMORROW_DATE=$(date -d "+1 days" '+%m-%d')
           TOMORROW_HOLIDAY="${HOLIDAYS_2026[$TOMORROW_DATE]}"
 
+          echo "CURRENT_MONTH_DAY=$CURRENT_MONTH_DAY" >> $GITHUB_ENV
           echo "TODAY_HOLIDAY=$TODAY_HOLIDAY" >> $GITHUB_ENV
           echo "TOMORROW_HOLIDAY=$TOMORROW_HOLIDAY" >> $GITHUB_ENV
           echo "TOMORROW_DATE=$TOMORROW_DATE" >> $GITHUB_ENV
