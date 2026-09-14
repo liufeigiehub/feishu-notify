@@ -13,6 +13,8 @@ on:
     # 周日 UTC 02:54 (北京时间 10:54)
     - cron: '54 2 * * 0'
     # 节假日前一天特别触发
+    - cron: '54 2 31 12 *'  # 12月31日 元旦节前一天
+    - cron: '54 2 30 4 *'   # 4月30日 劳动节前一天
     - cron: '54 2 18 6 *'   # 6月18日 端午节前一天
     - cron: '54 2 24 9 *'   # 9月24日 中秋节前一天
     - cron: '54 2 30 9 *'   # 9月30日 国庆节前一天
@@ -106,7 +108,7 @@ jobs:
               ["06-21"]="李遥、刘剑飞"
               ["09-25"]="王勇、王世腾"
               ["09-26"]="李闯、谢兵阳"
-              ["09-27"]="段传俊、于国涛"
+              ["09-27"]="段传俊、余涛"
               ["10-01"]="璩诚、孟凡奎"
               ["10-02"]="胡海斌、王毅"
               ["10-03"]="李东原、严鑫鑫"
@@ -165,7 +167,7 @@ jobs:
           echo "开始序列化节假日数据..."
 
           # 保存节假日值班安排到环境变量（使用简单字符串格式）
-          HOLIDAY_DUTY_STR="06-19:王勇、王世腾|06-20:李思成、郭成志|06-21:李遥、刘剑飞|09-25:王勇、王世腾|09-26:李闯、谢兵阳|09-27:段传俊、于国涛|10-01:璩诚、孟凡奎|10-02:胡海斌、王毅|10-03:李东原、严鑫鑫|10-04:翁弘毅、王勇|10-05:王世腾、李思成|10-06:郭成志、李遥|10-07:刘剑飞、李闯"
+          HOLIDAY_DUTY_STR="06-19:王勇、王世腾|06-20:李思成、郭成志|06-21:李遥、刘剑飞|09-25:王勇、王世腾|09-26:李闯、谢兵阳|09-27:段传俊、余涛|10-01:璩诚、孟凡奎|10-02:胡海斌、王毅|10-03:李东原、严鑫鑫|10-04:翁弘毅、王勇|10-05:王世腾、李思成|10-06:郭成志、李遥|10-07:刘剑飞、李闯"
           echo "HOLIDAY_DUTY_STR=$HOLIDAY_DUTY_STR" >> $GITHUB_ENV
 
           # 保存节假日名称
@@ -187,16 +189,23 @@ jobs:
           HOLIDAY_DUTY_STR: ${{ env.HOLIDAY_DUTY_STR }}
           HOLIDAYS_STR: ${{ env.HOLIDAYS_STR }}
         run: |
+          # 2026年调休补班日（法定节假日调休后，周末照常上班，不需要安排值班）
+          # 9月20日（周日）、10月10日（周六）为国庆调休补班日
+          declare -A MAKEUP_WORKDAYS=(
+              ["09-20"]="国庆调休补班"
+              ["10-10"]="国庆调休补班"
+          )
+
           # 周末值班表 - 平均分配版（节假日日期已移除，由节假日值班表覆盖）
           declare -A SCHEDULE=(
-              ["05-30"]="段传俊、于国涛"
+              ["05-30"]="段传俊、余涛"
               ["05-31"]="璩诚、李思成"
               ["06-06"]="孟凡奎、胡海斌"
               ["06-07"]="郭成志、谢兵阳"
               ["06-13"]="王毅、李东原"
               ["06-14"]="严鑫鑫、李遥"
               ["06-27"]="翁弘毅、王勇"
-              ["06-28"]="于国涛、刘剑飞"
+              ["06-28"]="余涛、刘剑飞"
               ["07-04"]="李东原、郭成志"
               ["07-05"]="段传俊、孟凡奎"
               ["07-11"]="谢兵阳、王世腾"
@@ -210,7 +219,7 @@ jobs:
               ["08-08"]="璩诚、孟凡奎"
               ["08-09"]="李遥、李思成"
               ["08-15"]="李东原、严鑫鑫"
-              ["08-16"]="王毅、于国涛"
+              ["08-16"]="王毅、余涛"
               ["08-22"]="段传俊、王勇"
               ["08-23"]="王世腾、王勇"
               ["08-29"]="严鑫鑫、李遥"
@@ -219,20 +228,19 @@ jobs:
               ["09-06"]="王毅、孟凡奎"
               ["09-12"]="胡海斌、翁弘毅"
               ["09-13"]="郭成志、刘剑飞"
-              ["09-19"]="璩诚、于国涛"
-              ["09-20"]="王世腾、谢兵阳"
-              ["10-10"]="刘剑飞、璩诚"
+              ["09-19"]="璩诚、余涛"
+              # 09-20 为国庆调休补班日（周日上班），不是真正的周末，不安排值班
               ["10-11"]="王毅、李闯"
               ["10-17"]="李东原、谢兵阳"
               ["10-18"]="孟凡奎、翁弘毅"
-              ["10-24"]="于国涛、郭成志"
+              ["10-24"]="余涛、郭成志"
               ["10-25"]="李闯、谢兵阳"
               ["10-31"]="翁弘毅、胡海斌"
               ["11-01"]="李遥、孟凡奎"
               ["11-07"]="刘剑飞、王勇"
               ["11-08"]="璩诚、王毅"
               ["11-14"]="李思成、段传俊"
-              ["11-15"]="严鑫鑫、于国涛"
+              ["11-15"]="严鑫鑫、余涛"
               ["11-21"]="李东原、王世腾"
               ["11-22"]="李遥、郭成志"
               ["11-28"]="王世腾、王毅"
@@ -241,7 +249,7 @@ jobs:
               ["12-06"]="李闯、段传俊"
               ["12-12"]="李思成、谢兵阳"
               ["12-13"]="严鑫鑫、孟凡奎"
-              ["12-19"]="于国涛、王勇"
+              ["12-19"]="余涛、王勇"
               ["12-20"]="刘剑飞、严鑫鑫"
               ["12-26"]="李闯、谢兵阳"
               ["12-27"]="胡海斌、段传俊"
@@ -295,22 +303,46 @@ jobs:
               }'
           }
 
-          # 1. 如果今天是节假日，发送节假日值班提醒
+          # 生成同一节假日期间的完整值班名单（按日期排序，一次性展示所有天数）
+          build_holiday_roster() {
+            local holiday_name="$1"
+            local dates=()
+            for day in "${!HOLIDAYS[@]}"; do
+              if [ "${HOLIDAYS[$day]}" == "$holiday_name" ]; then
+                dates+=("$day")
+              fi
+            done
+            IFS=$'\n' dates=($(sort <<< "${dates[*]}")); unset IFS
+            local lines=""
+            for d in "${dates[@]}"; do
+              local person="${HOLIDAY_DUTY[$d]:-待安排}"
+              lines="${lines}**${d}**：${person}\n"
+            done
+            echo -n "$lines"
+          }
+
+          # 1. 如果今天是节假日，发送节假日完整值班提醒（包含假期内所有天数）
           if [ -n "$TODAY_HOLIDAY" ]; then
-            HOLIDAY_PERSON="${HOLIDAY_DUTY[$CURRENT_MONTH_DAY]:-'待安排'}"
-            echo "今天是节假日 $TODAY_HOLIDAY, 值班: $HOLIDAY_PERSON"
-            send_message "节假日值班提醒" "**$TODAY_HOLIDAY ($CURRENT_MONTH_DAY)**\n值班人员：$HOLIDAY_PERSON"
+            ROSTER=$(build_holiday_roster "$TODAY_HOLIDAY")
+            echo "今天是节假日 $TODAY_HOLIDAY"
+            echo -e "$ROSTER"
+            send_message "节假日值班提醒" "**${TODAY_HOLIDAY}值班安排**\n${ROSTER}"
           fi
 
-          # 2. 如果明天是节假日，发送节假日前一天提醒
+          # 2. 如果明天是节假日，发送节假日完整值班提醒（提前预告假期内所有天数）
           if [ -n "$TOMORROW_HOLIDAY" ]; then
-            TOMORROW_PERSON="${HOLIDAY_DUTY[$TOMORROW_DATE]:-'待安排'}"
-            echo "明天是节假日 $TOMORROW_HOLIDAY, 值班: $TOMORROW_PERSON"
-            send_message "节假日值班提醒" "**明天是 $TOMORROW_HOLIDAY ($TOMORROW_DATE)**\n值班人员：$TOMORROW_PERSON"
+            ROSTER=$(build_holiday_roster "$TOMORROW_HOLIDAY")
+            echo "明天是节假日 $TOMORROW_HOLIDAY"
+            echo -e "$ROSTER"
+            send_message "节假日值班提醒" "**明天开始 ${TOMORROW_HOLIDAY}，完整值班安排：**\n${ROSTER}"
           fi
 
           # 3. 常规周末值班提醒（如果不是节假日）
           TODAY_IS_HOLIDAY="${HOLIDAYS[$CURRENT_MONTH_DAY]:-}"
+          # DAY1 也可能落在节假日范围内（例如节假日前一天恰好在工作日触发，
+          # DAY1/DAY2 被顺推到本周六日，而该周六日本身已被节假日覆盖），
+          # 此时不应再发送“待安排”的周末提醒，直接跳过整条常规提醒。
+          DAY1_IS_HOLIDAY="${HOLIDAYS[$DAY1]:-}"
           # 检查 DAY2 是否为空，避免空键访问关联数组
           if [ -n "$DAY2" ]; then
             DAY2_IS_HOLIDAY="${HOLIDAYS[$DAY2]:-}"
@@ -318,12 +350,21 @@ jobs:
             DAY2_IS_HOLIDAY=""
           fi
 
-          # 只有当天不是节假日时才发送周末提醒
-          if [ -z "$TODAY_IS_HOLIDAY" ]; then
-            DAY1_PERSON="${SCHEDULE[$DAY1]:-'待安排'}"
+          # 只有当天、且 DAY1 都不是节假日时才发送周末提醒
+          if [ -z "$TODAY_IS_HOLIDAY" ] && [ -z "$DAY1_IS_HOLIDAY" ]; then
+            # 调休补班日：照常上班，不需要安排值班，展示为“补班，无需值班”而非“待安排”
+            if [ -n "${MAKEUP_WORKDAYS[$DAY1]:-}" ]; then
+              DAY1_PERSON="${MAKEUP_WORKDAYS[$DAY1]}，无需值班"
+            else
+              DAY1_PERSON="${SCHEDULE[$DAY1]:-待安排}"
+            fi
 
             if [ -n "$DAY2_LABEL" ] && [ -z "$DAY2_IS_HOLIDAY" ]; then
-              DAY2_PERSON="${SCHEDULE[$DAY2]:-'待安排'}"
+              if [ -n "${MAKEUP_WORKDAYS[$DAY2]:-}" ]; then
+                DAY2_PERSON="${MAKEUP_WORKDAYS[$DAY2]}，无需值班"
+              else
+                DAY2_PERSON="${SCHEDULE[$DAY2]:-待安排}"
+              fi
               echo "$DAY1_LABEL值班: $DAY1_PERSON"
               echo "$DAY2_LABEL值班: $DAY2_PERSON"
               send_message "值班提醒" "**$DAY1_LABEL ($DAY1)**\n$DAY1_PERSON\n\n**$DAY2_LABEL ($DAY2)**\n$DAY2_PERSON"
