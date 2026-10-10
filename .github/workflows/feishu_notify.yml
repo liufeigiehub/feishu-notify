@@ -219,8 +219,8 @@ jobs:
           echo "DAY2_LABEL=$DAY2_LABEL" >> $GITHUB_ENV
 
           echo "值班日期: $DAY1_LABEL $DAY1, $DAY2_LABEL $DAY2"
-          [ -n "$TODAY_HOLIDAY" ] && echo "今天是节假日: $TODAY_HOLIDAY"
-          [ -n "$TOMORROW_HOLIDAY" ] && echo "明天是节假日: $TOMORROW_HOLIDAY"
+          [ -n "$TODAY_HOLIDAY" ] && echo "今天是节假日: $TODAY_HOLIDAY" || true
+          [ -n "$TOMORROW_HOLIDAY" ] && echo "明天是节假日: $TOMORROW_HOLIDAY" || true
 
       - name: Send Feishu Message
         if: steps.check-sent.outputs.skip != 'true'
